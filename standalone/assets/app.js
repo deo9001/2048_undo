@@ -125,7 +125,7 @@ var ThemeManager = (function () {
     apply(saved && THEMES.indexOf(saved) >= 0 ? saved : "light");
   }
 
-  return { init: init, cycle: cycle, get: function () { return currentTheme; } };
+  return { init: init, cycle: cycle, apply: apply, get: function () { return currentTheme; } };
 }());
 
 /* ── Polyfills ──────────────────────────────────────────────── */
@@ -173,7 +173,7 @@ var ThemeManager = (function () {
 window.fakeStorage = {
   _data: {},
   setItem:    function (id, val) { this._data[id] = String(val); },
-  getItem:    function (id) { return Object.prototype.hasOwnProperty.call(this._data, id) ? this._data[id] : null; },
+  getItem:    function (id) { return Object.prototype.hasOwnProperty.call(this._data, id) ? this._data[id] : undefined; },
   removeItem: function (id) { delete this._data[id]; },
   clear:      function ()   { this._data = {}; }
 };
@@ -597,8 +597,8 @@ KeyboardInputManager.prototype.listen = function () {
       return;
     }
 
-    // ? or H (shift+/) – help toggle
-    if (!mods && (e.which === 191 && e.shiftKey || e.which === 72)) {
+    // ? (Shift+/) – help toggle
+    if (!mods && e.which === 191 && e.shiftKey) {
       self.emit("toggleHelp");
       return;
     }
@@ -1401,7 +1401,12 @@ window.AppBridge = {
   },
 
   setTheme: function (theme) {
-    ThemeManager.init && ThemeManager.cycle && ThemeManager.cycle();
+    var valid = ["light", "dark", "system"];
+    if (valid.indexOf(theme) >= 0) {
+      ThemeManager.apply(theme);
+    } else {
+      ThemeManager.cycle();
+    }
   },
 
   importJSON: function (json) {
